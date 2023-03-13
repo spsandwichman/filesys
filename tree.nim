@@ -35,7 +35,6 @@ proc searchImmediate(folder: Node, name: string): Node =
         if n.name == name:
             return n
 
-
 proc returnNodeAtPath(folder: Node, path: seq[string]): Node =
     var p = folder.searchImmediate(path[0])
     if path.len != 1:
@@ -46,8 +45,12 @@ proc returnNodeAtPath(folder: Node, path: seq[string]): Node =
 proc returnNodeAtPath(system: Node, path: string): Node =
     let p = path.split('/')
     result = system.returnNodeAtPath(p)
-    
 
+
+
+
+proc addFolder(system: Node, path: string, newFolderName: string) =
+    let p = returnNodeAtPath(path:)
 
 
 
