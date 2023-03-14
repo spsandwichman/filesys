@@ -22,13 +22,26 @@ proc addFolderInFolder(folder: Node, name: string) =
     if folder.kind == nFile:
         err("cannot add folder to file")
         return
-    folder.children.add Node(kind: nFolder, name: name)
+    folder.children.add Node(kind: nFolder, name: name, parent: folder)
+
+    for i in 0..folder.children.high:
+        var j = i
+        while j > 0 and folder.children[j-1].name > folder.children[j].name:
+            swap(folder.children[j], folder.children[j-1])
+            j -= 1
+
 
 proc addFileInFolder(folder: Node, name: string, data: string) =
     if folder.kind == nFile:
         err("cannot add file to file")
         return
-    folder.children.add Node(kind: nFile, name: name, data: data)
+    folder.children.add Node(kind: nFile, name: name, data: data, parent: folder)
+
+    for i in 0..folder.children.high: # sort - to optimize later
+        var j = i
+        while j > 0 and folder.children[j-1].name > folder.children[j].name:
+            swap(folder.children[j], folder.children[j-1])
+            j -= 1
 
 proc searchImmediate(folder: Node, name: string): Node =
     for n in folder.children:
@@ -49,8 +62,9 @@ proc returnNodeAtPath(system: Node, path: string): Node =
     result = system.returnNodeAtPath(p)
 
 proc treeInner(node: Node, level: uint) =
-    if node.kind == nFolder: echo spaces(4*level), " 🗀 ", node.name
-    else: echo spaces(4*level), " 🗎 ", node.name
+    const levelspacing = 6
+    if node.kind == nFolder: echo spaces(levelspacing*level), " 🗀 ", node.name
+    else: echo spaces(levelspacing*level), " 🗎 ", node.name
     if node.kind == nFile: return
     if node.children.len != 0:
         for n in node.children:
@@ -67,9 +81,11 @@ proc searchInner(node: Node, query, currentpath: string): (bool, string) =
 # ---------------------------------------------------------------------------- #
 
 proc addFolder(system: Node, path: string, newFolderName: string) =
-    if not system.returnNodeAtPath(path & "/" & newFolderName).isNil: err("cannot create: folder \"" & path & "\" already exists")
+    if not system.returnNodeAtPath(path & "/" & newFolderName).isNil: 
+        err("cannot create: folder \"" & path & "\" already exists")
     let n = system.returnNodeAtPath(path)
-    if n.isNil: err("cannot resolve path \"" & path & "\"")
+    if n.isNil: 
+        err("cannot resolve path \"" & path & "\"")
     n.addFolderInFolder(newFolderName)
 
 proc addFile(system: Node, path: string, newFileName: string, newFileData: string) =
@@ -84,21 +100,29 @@ proc tree(system: Node) =
     for n in system.children:
         n.treeInner(0)
 
-proc search(system: Node, query: string): string = # returns path to file or folder named [query]. if file is not found, path returned is blank.
+proc search(system: Node, query: string): seq[string] = # returns paths to file or folder named [query]. if file is not found, path returned is blank.
     for n in system.children:
         var q = n.searchInner(query, "root")
-        if q[0]: return q[1]
-    return ""
+        if q[0]: result.add q[1]
+
+#proc move(system: Node, sourcePath, destinationPath: string, replaceDuplicates: bool) = discard
+
+#proc copy(system: Node, sourcePath, destinationPath: string, replaceDuplicates: bool) = discard
+
+#proc delete(system:Node, path:string) = discard
 
 # ---------------------------------------------------------------------------- #
-
 
 var FS = initFileSystem()
 FS.addFolder("root", "folder1")
 FS.addFolder("root", "folder2")
 FS.addFolder("root/folder2", "folder3")
-FS.addFile("root/folder2/folder3", "A.txt", "LMAO")
+FS.addFile("root/folder2/folder3", "A", "a")
 FS.addFolder("root/folder2/folder3", "folder4")
-FS.addFile("root/folder1", "B.txt", "LMAO")
-echo FS.search("folder3")
+FS.addFile("root/folder1", "B", "b")
+FS.addFile("root/folder1", "A", "a2")
+echo ""
 FS.tree
+echo ""
+echo "search \"A\" => " & $FS.search("A")
+echo ""
