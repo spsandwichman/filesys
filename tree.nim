@@ -25,10 +25,8 @@ proc addFolderInFolder(folder: Node, name: string) =
     folder.children.add Node(kind: nFolder, name: name, parent: folder)
 
     for i in 0..folder.children.high:
-        var j = i
-        while j > 0 and folder.children[j-1].name > folder.children[j].name:
-            swap(folder.children[j], folder.children[j-1])
-            j -= 1
+        if folder.children[i].name > folder.children[folder.children.high].name:
+            swap(folder.children[i], folder.children[folder.children.high])
 
 
 proc addFileInFolder(folder: Node, name: string, data: string) =
@@ -37,11 +35,9 @@ proc addFileInFolder(folder: Node, name: string, data: string) =
         return
     folder.children.add Node(kind: nFile, name: name, data: data, parent: folder)
 
-    for i in 0..folder.children.high: # sort - to optimize later
-        var j = i
-        while j > 0 and folder.children[j-1].name > folder.children[j].name:
-            swap(folder.children[j], folder.children[j-1])
-            j -= 1
+    for i in 0..folder.children.high:
+        if folder.children[i].name > folder.children[folder.children.high].name:
+            swap(folder.children[i], folder.children[folder.children.high])
 
 proc searchImmediate(folder: Node, name: string): Node =
     for n in folder.children:
@@ -114,15 +110,23 @@ proc search(system: Node, query: string): seq[string] = # returns paths to file 
 # ---------------------------------------------------------------------------- #
 
 var FS = initFileSystem()
-FS.addFolder("root", "folder1")
-FS.addFolder("root", "folder2")
-FS.addFolder("root/folder2", "folder3")
-FS.addFile("root/folder2/folder3", "A", "a")
-FS.addFolder("root/folder2/folder3", "folder4")
-FS.addFile("root/folder1", "B", "b")
-FS.addFile("root/folder1", "A", "a2")
+# FS.addFolder("root", "folder1")
+# FS.addFolder("root", "folder2")
+# FS.addFolder("root/folder2", "folder3")
+# FS.addFile("root/folder2/folder3", "A", "a")
+# FS.addFolder("root/folder2/folder3", "folder4")
+# FS.addFile("root/folder1", "B", "b")
+# FS.addFile("root/folder1", "A", "a2")
+for i in 0..9:
+    FS.addFolder("root", $(9-i))
+    for j in 0..9:
+        FS.addFolder("root/" & $(9-i), $(9-i) & $(9-j))
+        for k in 0..9:
+            FS.addFile("root/" & $(9-i) & "/" & $(9-i) & $(9-j), $(9-i) & $(9-j) & $(9-k), "")
+    
 echo ""
 FS.tree
 echo ""
-echo "search \"A\" => " & $FS.search("A")
+let q = "A"
+echo "search \"" & q & "\" => " & $FS.search(q)
 echo ""

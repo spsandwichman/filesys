@@ -1,11 +1,11 @@
-var x = @["d","b","A","a","c"]
+import std/sequtils
+
+var x = @["aaa","bbb","ccc","ddd","abc"]
 
 proc sort(list: var seq[string]) =
     for i in 0..list.high:
-        var j = i
-        while j > 0 and list[j-1] > list[j]:
-            swap(list[j], list[j-1])
-            j -= 1
+        if list[i] > list[list.high]:
+            swap(list[i], list[list.high])
 
 echo x
 sort(x)
